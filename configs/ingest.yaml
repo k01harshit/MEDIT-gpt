@@ -1,0 +1,10 @@
+# configs/ingest.yaml
+search:
+  query: '"drug-related side effects and adverse reactions" [MeSH] AND hasabstract'
+  year_from: 2005
+  year_to: 2026
+  pub_types:
+    - "RCT"
+    - "meta-analysis"
+    - "cohort"
+    - "case report"

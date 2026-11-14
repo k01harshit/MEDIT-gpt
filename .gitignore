@@ -1,0 +1,17 @@
+# Environments and Secrets
+.env
+__pycache__/
+*.pyc
+
+# Virtual Environments
+.venv/
+env/
+medlit/
+
+# Data and Vector Store
+data/raw/
+data/processed/
+data/qdrant/
+
+# Streamlit
+.streamlit/
