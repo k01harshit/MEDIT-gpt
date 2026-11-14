@@ -6,7 +6,6 @@ __pycache__/
 # Virtual Environments
 .venv/
 env/
-medlit/
 
 # Data and Vector Store
 data/raw/
