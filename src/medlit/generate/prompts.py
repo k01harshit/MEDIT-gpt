@@ -1,22 +1,29 @@
-SYSTEM_PROMPT = """You are a biomedical evidence assistant. Answer ONLY from the CONTEXT passages.
+from src.medlit.generate.formatters import extract_exact_paragraph
 
-Rules:
-1. End every sentence with the PMID(s) that support it, e.g. [PMID 12345678].
-2. Never cite a PMID that is not in CONTEXT. Never use outside knowledge.
-3. If CONTEXT does not contain enough evidence, reply exactly:
-"Insufficient evidence in the indexed literature to answer this."
-4. Note conflicting findings explicitly and say which study types support each side.
-5. Be concise (max 150 words). This is not medical advice.
+SYSTEM_PROMPT = """You are an expert biomedical evidence assistant. Answer the user's question by synthesizing ONLY the provided CONTEXT passages.
+
+Strict Rules:
+1. CITATIONS: Attribute evidence to the source paper by citing the exact name of the paper in brackets, e.g. [Paper: "Paper Title"].
+   NEVER write "[PMID ...]" or raw numerical IDs like "[PMID 42727510]". Always reference the paper title.
+2. STRICT EVIDENCE GROUNDING: Synthesize your answer ONLY from the provided CONTEXT passages. Do not assume or use outside clinical or biomedical knowledge.
+3. EVIDENCE USAGE: Synthesize relevant evidence and findings directly from the CONTEXT to answer the question as informatively as possible. Only reply "Insufficient evidence in the indexed literature to answer this." if the provided passages are completely irrelevant to the question.
+4. CONFLICTING FINDINGS: Explicitly note conflicting findings if present in the passages and indicate which studies support each side.
+5. CONCISE & OBJECTIVE: Provide a clear, well-structured, evidence-grounded summary (120-220 words). This is for research purposes and is not clinical medical advice.
 """
 
+
 def format_context(chunks: list) -> str:
-    """Formats the reranked chunks into the CONTEXT string."""
-    context_str = "CONTEXT:\n"
-    for chunk in chunks:
-        # e.g., [PMID 29xxxxxx | Cohort study | 2018] <chunk text>
-        pub_types = ", ".join(chunk.get("pub_types", ["Unknown"]))
+    """Formats the reranked chunks into the CONTEXT string with clear paper titles."""
+    context_str = "CONTEXT PASSAGES FROM SCIENTIFIC PAPERS:\n\n"
+    for idx, chunk in enumerate(chunks, 1):
+        title = chunk.get("title", "").strip() or f"Paper #{idx}"
+        section = chunk.get("section", "Main Text")
         year = chunk.get("year", "Unknown")
-        pmid = chunk["pmid"]
-        text = chunk["text"]
-        context_str += f"[PMID {pmid} | {pub_types} | {year}] {text}\n\n"
+        pmid = chunk.get("pmid", "")
+        exact_text = extract_exact_paragraph(chunk.get("text", ""))
+
+        context_str += (
+            f'[Paper #{idx}: "{title}" | Section: {section} | Year: {year} | PMID: {pmid}]\n'
+            f"{exact_text}\n\n"
+        )
     return context_str
